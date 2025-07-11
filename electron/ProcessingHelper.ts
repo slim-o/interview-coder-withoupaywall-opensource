@@ -477,14 +477,17 @@ export class ProcessingHelper {
         const messages = [
           {
             role: "system" as const, 
-            content: "You are a coding challenge interpreter. Analyze the screenshot of the coding problem and extract all relevant information. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output. Just return the structured JSON without any other text."
+            
+            content: "You are a math problem interpreter. Analyze the screenshot of the math problem and extract all relevant information. Return the information in JSON format with these fields: problem_statement. Just return the structured JSON without any other text."
+
           },
           {
             role: "user" as const,
             content: [
               {
                 type: "text" as const, 
-                text: `Extract the coding problem details from these screenshots. Return in JSON format. Preferred coding language we gonna use for this problem is ${language}.`
+                
+                text: `Extract the full math problem statement from these screenshots.`
               },
               ...imageDataList.map(data => ({
                 type: "image_url" as const,
@@ -734,6 +737,7 @@ export class ProcessingHelper {
       }
 
       // Create prompt for solution generation
+      /*
       const promptText = `
 Generate a detailed solution for the following coding problem:
 
@@ -760,8 +764,28 @@ I need the response in the following format:
 For complexity explanations, please be thorough. For example: "Time complexity: O(n) because we iterate through the array only once. This is optimal as we need to examine each element at least once to find the solution." or "Space complexity: O(n) because in the worst case, we store all elements in the hashmap. The additional space scales linearly with the input size."
 
 Your solution should be efficient, well-commented, and handle edge cases.
-`;
+`;*/
+      const promptText = `
+Solve the following math problem in a clear, step-by-step manner. Include reasoning for each step. Use LaTeX formatting for equations by enclosing them in $$...$$.
 
+PROBLEM STATEMENT:
+${problemInfo.problem_statement}
+
+Your response should be structured like this:
+
+1. Problem Restatement: Briefly restate the problem.
+2. Solution Steps: List clear, numbered steps explaining your thought process.
+3. Final Answer: Clearly state the final answer.
+
+Example:
+1. Problem Restatement: ...
+2. Solution Steps:
+   Step 1: ...
+   Step 2: ...
+3. Final Answer: ...
+
+If necessary, explain any theorems or formulas you use.
+`;
       let responseContent;
       
       if (config.apiProvider === "openai") {
@@ -777,7 +801,8 @@ Your solution should be efficient, well-commented, and handle edge cases.
         const solutionResponse = await this.openaiClient.chat.completions.create({
           model: config.solutionModel || "gpt-4o",
           messages: [
-            { role: "system", content: "You are an expert coding interview assistant. Provide clear, optimal solutions with detailed explanations." },
+            //{ role: "system", content: "You are an expert coding interview assistant. Provide clear, optimal solutions with detailed explanations." },
+            { role: "system", content: "You are an expert mathematics assistant. Provide clear, detailed, step-by-step solutions to math problems." },
             { role: "user", content: promptText }
           ],
           max_tokens: 4000,
